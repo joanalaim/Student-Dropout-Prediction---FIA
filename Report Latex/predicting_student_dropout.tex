@@ -1,0 +1,397 @@
+
+\documentclass[runningheads]{llncs}
+
+\usepackage[T1]{fontenc}
+
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{float} 
+\usepackage{amsmath}
+
+\usepackage{array}
+
+\usepackage{cite}
+
+\usepackage{graphicx}
+% Used for displaying a sample figure. If possible, figure files should
+% be included in EPS format.
+%
+% If you use the hyperref package, please uncomment the following two lines
+% to display URLs in blue roman font according to Springer's eBook style:
+%\usepackage{color}
+%\renewcommand\UrlFont{\color{blue}\rmfamily}
+%\urlstyle{rm}
+%
+\begin{document}
+%
+\title{Predicting Student Dropout}
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{Joana Laim (114586) \and
+Simão Machado (114180)}
+
+\authorrunning{J. Laim and S. Machado}
+% If you had more than two authors, use "et al."
+
+\institute{
+Department of Electronics, Telecommunications and Informatics (DETI)\\
+University of Aveiro, Aveiro, Portugal \\
+\email{\{joana.laim, simaomachado\}@ua.pt} \\
+\url{Course: Fundamentos de Inteligência Artificial, 2024/2025}
+}
+%
+\maketitle              % typeset the header of the contribution
+%
+\begin{abstract} Dropout rates are a concern for higher education institutions due to their implications for both student success and institutional performance. This study presents the use of machine learning techniques to forecast student dropout based on academic, demographic, socioeconomic, and macroeconomic data collected from a Portuguese university. Two machine learning algorithms—Logistic Regression and Support Vector Machine (SVM)—were trained and compared using various performance measures, with particular interest in recall and F1-score. The best-performing model achieved an F1-score of 0.7876 and a recall of 0.8476, demonstrating great ability in identifying at-risk students. The results enhance the potential of data-driven approaches to support early intervention strategies and improve student retention in higher education.
+
+\keywords{Student Dropout Prediction \and Higher Education \and Machine Learning \and Supervised Learning.}
+\end{abstract}
+%
+%
+%
+\section{Introduction}
+Student dropout is the definitive termination of studies in the higher education system without obtaining an academic degree. It can be voluntary, such as changing majors or institutions, or involuntary, due to academic failure \cite{Larsen2013Evidence}.
+According to data from the Directorate-General for Education and Science Statistics (DGEEC), for the academic year 2021/2022, 11\% of students who enrolled for the first time in the first year of a Bachelor's degree the previous year were neither enrolled in higher education nor had graduated, indicating a concerning dropout rate~\cite{poligrafo2024}.
+Therefore, predicting student dropout is essential for improving retention rates, minimizing financial losses, and preserving human capital. Through predictive modeling, educational institutions can design targeted interventions, optimize resource allocation, and develop informed policies that effectively curb dropout rates. By analyzing student data—such as academic performance and demographic information—machine learning models yield data-driven insights that address the unique needs of at-risk students \cite{Vaarma2024Predicting}.
+
+In this work, our primary objective is to assess machine learning models that predict student dropout based on demographic, socioeconomic, and academic performance data. We specifically chose a dataset originating from a Portuguese university because of its realistic, comprehensive feature set and its strong relevance to real-world educational contexts, thereby enhancing the external validity of our findings.
+
+\section{State of the Art}
+
+The prediction of student dropout has received increasing attention in recent years due to its potential to support institutional decision-making and improve student retention. Machine learning techniques have become central in this domain, enabling data-driven interventions.
+
+Several studies have applied classification algorithms such as Logistic Regression, Support Vector Machines (SVM), Decision Trees, Random Forests, and Neural Networks to predict dropout. For instance, Deb et al.~\cite{deb2024dropout} used Random Forest on a dataset from an university of Bangladesh and achieved a predictive score of 78\%. 
+
+In addition to predictive performance, some studies have addressed ethical concerns related to dropout prediction. For example, Karimi-Haghighi et al.~\cite{karimihaghighi2021predictingearlydropoutcalibration} proposed a machine learning approach to identify students at risk of dropping out while accounting for algorithmic fairness. Their method aimed to mitigate potential biases and ensure equitable treatment across different demographic groups, contributing to more responsible and transparent predictive models.
+
+Interestingly, a recent study by Kim et al.~\cite{kim2023studentsdropoutuniversity}, conducted in the United States, also utilized the same Portuguese higher education dataset. This highlights the dataset’s growing international recognition and its suitability for modeling student attrition. Despite being developed in a different academic and cultural context, the study confirms the dataset's richness and relevance, further validating our choice of data and supporting the broader applicability of the results obtained in this work.
+
+Despite the dataset originating from a Portuguese institution, most published studies that use it have been conducted by researchers from outside Portugal. This work distinguishes itself by offering a structured, model-driven analysis grounded in the national academic context. By addressing the problem of student dropout with data from a real institution, and considering practical implications such as early identification of at-risk students, the study contributes both methodologically and in terms of local relevance.
+
+
+
+\section{About the dataset}
+\subsection{Credit to where credit is due}
+For the training of our model, we utilized a dataset developed by four professors from the Instituto Politécnico de Portalegre: Valentim Realinho, Jorge Machado, Luis Batista, and Mónica V. Martins. This dataset comprises demographic, socioeconomic, and macroeconomic data collected at the time of student enrollment, alongside detailed academic records from students' first and second semesters.
+
+The dataset covers student records from academic years 2007/2008 through 2018/2019, representing enrollments across 17 different undergraduate degrees spanning various fields such as agronomy, design, education, nursing, journalism, management, social service, and technologies.
+
+For further details regarding the data sources utilized by the aforementioned professors or to access the dataset for personal research purposes, please consult \cite{valentim_realinho_2021_5777340}\cite{highered2022kaggle}s, where their publication detailing the dataset and the corresponding CSV file are available.
+
+\subsection{Dataset Description}
+
+The dataset consists of 4,424 student records and 35 attributes, covering a wide range of academic, demographic, and socioeconomic factors. Each record corresponds to an individual student enrolled in a higher education institution.
+
+The features include variables such as \texttt{Age at enrollment}, \texttt{Gender}, \texttt{Marital status}, \texttt{Course}, and \texttt{Scholarship holder}, as well as academic performance indicators like \texttt{Curricular units approved}, \texttt{Grade}, and \texttt{Number of evaluations}. In addition, the dataset incorporates financial and contextual information such as \texttt{Debtor status}, \texttt{Tuition fees up to date}, and national economic indicators including \texttt{Unemployment rate}, \texttt{Inflation rate}, and \texttt{GDP}.
+
+The target variable (\texttt{Target}) is categorical and originally includes three classes: \texttt{Graduate}, \texttt{Enrolled}, and \texttt{Dropout}.
+
+\subsection{Data Preprocessing}
+
+To tailor the analysis toward identifying at-risk students, the original multiclass target variable was converted into a binary classification task: \texttt{Dropout} was retained as class 1, while \texttt{Graduate} and \texttt{Enrolled} were merged into class 0.
+
+The dataset was checked for missing values, and none were found, eliminating the need for imputation. Since, all the features of the dataset are numeric or were already categorical but encoded, only the newly defined binary target variable was encoded accordingly.
+
+Finally, the data was split into 70\% training, 15\% validation, and 15\% testing subsets, enabling robust model development and evaluation.
+
+
+\subsection{Data balancing}
+
+Following the initial transformation of the target variable, it is crucial to examine the distribution of class labels to gain a clearer understanding of the dataset's characteristics. Specifically, analyzing the number of instances within each class provides valuable insights into potential imbalances that could impact model performance. 
+\par
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{class_distribution.png}
+    \caption{Distribution of Dropout and Non Dropout Instances}
+    \label{fig1}
+\end{figure}
+
+As illustrated in Fig.~\ref{fig1}, the dataset exhibits a degree of class imbalance, which must be considered when developing predictive models to ensure robust and unbiased results. Imbalanced datasets often lead to biased models that favor the majority class, making it difficult to accurately predict the minority class. This imbalance can cause overfitting, where the model performs well on training data but poorly on unseen data due to its inability to generalize \cite{Santos2018Cross-Validation}.
+
+In order to prevent such occurrences a data balancing technique was implemented - under-sampling.
+\subsubsection{Under-Sampling}
+
+Under-sampling addresses class imbalance by reducing the number of majority class instances, aiming to improve the model’s ability to recognize the minority class—in this case, students at risk of dropping out. A common method is random under-sampling, which removes samples from the majority class at random. Although this may discard potentially informative data~\cite{SUN2024123328}, it is an acceptable trade-off given our goal of minimizing false negatives.
+
+In contrast, over-sampling techniques such as SMOTE generate synthetic minority instances to balance the data, but may increase the risk of overfitting when synthetic samples do not reflect true data variability~\cite{Santos2018Cross-Validation}. 
+
+Given these considerations, we opted for a conservative approach by using the \texttt{RandomUnderSampler} from the \texttt{imbalanced-learn} library~\cite{JMLR:v18:16-365}, which randomly balances the classes based on a specified strategy.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\linewidth]{balanced_class_distribution.png}
+    \caption{Distribution of Dropout and Non Dropout Instances after Under-Sampling}
+    \label{fig2}
+\end{figure}.
+
+\subsection{Feature Scaling and Standardization}
+
+Normalization and standardization are preprocessing techniques used to ensure that features contribute equally to the learning process, especially when they have different scales. Normalization typically transforms features to a common range, while standardization centers the data around zero and scales it to unit variance. These processes help prevent features with larger ranges from disproportionately influencing distance-based or gradient-based models, and they improve the model's ability to learn consistent patterns\cite{Raju2020Study}. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{bef_stand.png}
+    \caption{Distribution of some features before standardization}
+    \label{fig3}
+\end{figure}
+
+Figure~\ref{fig3} illustrates the original distributions of three selected features. The differing scales highlight the need for standardization to avoid model bias toward features with higher magnitude.
+
+In this study, we applied Scikit-Learn's \texttt{StandardScaler}, which 
+subtracts the mean value, and then divides by the standard deviation so that the resulting distribution has unit variance. Standardization does not bound values to a specific range, which in some cases may be a problem but, on the other hand, is much less affected by outliers\cite{geron2019hands}.
+
+\subsection{Data visualization}
+
+Following the preprocessing stage, it is essential to perform exploratory data analysis through visual means. Data visualization plays a critical role in understanding the structure, patterns, and relationships within the dataset before model training. 
+
+As highlighted by Shinde and Shivthare~\cite{article}, effective visualization enables intuitive insight into complex data, supporting more informed and efficient decision-making throughout the machine learning pipeline. It allows researchers to detect outliers, understand feature distributions, identify potential correlations, and validate assumptions about the data. 
+
+In this study, various visualizations were employed to explore the dataset, including histograms, boxplots, and a correlation matrix. These tools helped guide the feature selection process, assess the presence of skewed distributions, and better understand the relationship between input variables and the target class.
+
+To gain a deeper understanding of the dataset, three key types of visualizations were selected.
+
+\subsubsection{Histograms}
+ were used to examine the distribution of selected features before - as we have seen previously - and after standardization. This visualization helps identify whether features follow a normal distribution, remain skewed, or exhibit discrete behavior, even after scaling. In Figure~\ref{fig4}, the three same features as before are presented. The histograms show that while standardization has adjusted the scale and central tendency, the underlying shape of each distribution remains unchanged. These insights are important when selecting models sensitive to feature distribution or considering further transformations.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{after_stand.png}
+    \caption{Distribution of the same features after standardization}
+    \label{fig4}
+\end{figure}
+
+\subsubsection{Box plots}
+
+ were employed to visualize and compare the distribution of selected academic performance features across the two target classes: dropout and non-dropout. Figure~\ref{fig5} displays two key variables grouped by dropout status. 
+
+The first, representing the number of curricular units enrolled in the first semester, shows that non-dropout students generally exhibit higher median enrollment, though the inter-quartile ranges of both groups overlap considerably. This suggests a moderate relationship between enrollment behavior and dropout risk.
+
+In contrast, the second feature - number of curricular units approved in the second semester - shows a much clearer separation between the classes. Dropout students exhibit a significantly lower median, a narrower inter-quartile range, and fewer outliers, indicating more consistent under performance.
+
+Between the two, \textit{approved curricular units in the second semester} demonstrates greater discriminative power, as evidenced by the more distinct medians and reduced overlap. These patterns support the hypothesis that academic performance, particularly in the second semester, is a stronger indicator of student retention than enrollment volume alone.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{boxplots.png}
+    \caption{Boxplots of two selected academic performance features, grouped by dropout status. Feature values are standardized.}
+    \label{fig5}
+\end{figure}
+
+
+\subsubsection{Correlation Matrix}
+
+To further investigate relationships among features and between each feature and the target variable, a correlation matrix was used, as shown in Figure~\ref{fig6}. Several groups of features exhibit strong positive correlations with each other, particularly those related to academic performance (e.g., units enrolled, evaluated, and approved), which suggests potential redundancy.
+
+In terms of correlation with the target variable, a few features—especially those related to second semester academic success—show moderate correlations, mostly negative, indicating their potential predictive value. While no single feature is highly correlated with the target, the combined effect of multiple moderately relevant features may contribute to effective model performance.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{correlation_matrix.png}
+    \caption{Correlation matrix for all features and target variable}
+    \label{fig6}
+\end{figure}
+
+\section{Methodology}
+\subsection{Used Models}
+
+In this project, two distinct machine learning algorithms were implemented: Logistic Regression and Support Vector Machine (SVM). These models are well-suited for binary classification tasks, aligning with the objective of predicting student dropout. Their selection was motivated by their interpretability and the familiarity the team had with their theoretical foundations and practical implementation. 
+
+\subsubsection{Logistic Regression}
+
+Logistic Regression is a widely used statistical method for binary classification problems. It models the probability that a given input belongs to a particular class by learning a linear combination of input features. The output of this linear function is then passed through a logistic (sigmoid) activation function, whose formula is as follows:
+
+\begin{equation}
+h_{\theta}(x) = \frac{1}{1 + e^{-\theta^T x}}
+\end{equation}
+
+which maps the result to a probability between 0 and 1. This probabilistic interpretation makes it particularly suitable for classification tasks where decision boundaries are approximately linear~\cite{Zaidi2023Two}.
+
+\subsubsection{Support Vector Machine (SVM)}
+
+Support Vector Machine (SVM) is a supervised learning algorithm that aims to find the optimal hyperplane that maximizes the margin between data points of different classes. Unlike other classifiers that prioritize minimizing classification error, SVM focuses on maximizing this margin, which contributes to improved generalization on unseen data. One of the key strengths of SVM lies in its robustness to high-dimensional and noisy datasets, a common challenge in real-world applications\cite{10426542}.
+
+\subsection{Evaluation Metrics}
+
+To gauge model performance, several evaluation metrics were used, all of which stemmed from the counts of true and false positives and negatives~\cite{google_classification_metrics}.
+
+\subsubsection{Confusion Matrix} is indicative of how well the model can distinguish between the two classes: dropout and non-dropout. It provides information about the type of errors made—i.e., false positives (students mistakenly identified as dropouts) and false negatives (dropouts the model failed to identify).
+
+\subsubsection{Accuracy} measures the overall ratio of correct predictions. However, in unbalanced data like this, it is misleading, as it does not show the quality of how well the model identifies the minority class.
+
+\subsubsection{Recall} (or true positive rate) is particularly important in dropout prediction, as it measures the quality of how well the model correctly identifies at-risk students. High recall reduces the likelihood of missing students who would indeed drop out.
+
+\subsubsection{Precision} is the proportion of students predicted to drop out who actually are at risk. While less critical than recall in this case, having good precision prevents unnecessary or misplaced interventions.
+
+\subsubsection{F1-score} is the harmonic mean of precision and recall. It's a balanced one, especially effective when both false positives and false negatives are important, as in the case of schools where every correct prediction could mean intervention at the right time for each student.
+
+
+\section{Model Training}
+
+\subsection{Baseline Evaluation}
+
+To assess the initial performance of the models, three variants were trained using default hyperparameters: Logistic Regression with L2 regularization, Logistic Regression without regularization, and Support Vector Machine (SVM) with a linear kernel. These models were evaluated on the train set and validation set to compaare each performance's, using the training set for fitting. 
+
+\begin{table}[H]
+\centering
+\caption{Performance on the training set for the baseline models.}
+\label{tab:train_baseline}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1 Score} & \textbf{AUC} \\
+\hline
+LogReg (L2) & 0.8582 & 0.8799 & 0.8296 & 0.8540 & 0.9288 \\
+LogReg (No Penalty) & 0.8561 & 0.8785 & 0.8265 & 0.8517 & 0.9288 \\
+SVM (Linear) & 0.8602 & 0.8854 & 0.8276 & 0.8555 & 0.9271 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Performance on the validation set for the baseline models.}
+\label{tab:val_baseline}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1 Score} & \textbf{AUC} \\
+\hline
+LogReg (L2) & 0.8584 & 0.7751 & 0.8355 & 0.8042 & 0.9205 \\
+LogReg (No Penalty) & 0.8569 & 0.7720 & 0.8355 & 0.8025 & 0.9207 \\
+SVM (Linear) & 0.8569 & 0.7698 & 0.8398 & 0.8033 & 0.9173 \\
+\hline
+\end{tabular}
+\end{table}
+
+ Tables~\ref{tab:train_baseline} and~\ref{tab:val_baseline} summarize the performance of the baseline models on the training and validation sets, respectively. All three models demonstrated comparable results across key metrics, with Logistic Regression and SVM yielding F1 scores above 0.80 and AUC values above 0.91. The minimal performance drop between training and validation comes from the precision score which suggests class 0 is not being representative enough. On the other hand, dropout students are being correctly identified, according to the recall scores. Overall the discrepancy between sets suggests the overfitting is not a major problem, either way, the issue will be addressed subsequently. 
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{phase1_val_conf_matrix.png}
+    \caption{Confusion matrices on the validation set}
+    \label{fig:conf_matrix_baseline}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{phase1_val_roc_curve.png}
+    \caption{ROC curves on the validation set}
+    \label{fig:roc_curve_baseline}
+\end{figure}
+
+
+Figure~\ref{fig:conf_matrix_baseline} presents the confusion matrices for each model. All three configurations performed similarly, correctly identifying a high proportion of both dropout and non-dropout students. The SVM model yielded the fewest false negatives (37), closely followed by both logistic regression variants (38). This suggests that all models were able to detect the majority of at-risk students.
+
+
+
+Figure~\ref{fig:roc_curve_baseline} shows the corresponding ROC curves and AUC values. Logistic Regression without regularization achieved the highest AUC (0.9207), although the difference compared to the regularized version (0.9205) and SVM (0.9173) was negligible. These results confirm that the models are well-calibrated for the dropout classification task, even before any hyperparameter tuning.
+
+This baseline evaluation guided the selection of hyperparameters and model refinement in subsequent stages.
+
+
+\subsection{Feature Selection}
+
+LASSO (Least Absolute Shrinkage and Selection Operator), is a regression technique that combines regularization and feature selection. By applying a constraint on the sum of the absolute values of the model coefficients, LASSO shrinks some of them to zero. As a result, only variables with non-zero coefficients are retained in the final model, reducing complexity and helping to minimize prediction error.
+
+In this study, models were evaluated using both the full feature set and a subset selected via Lasso regression. The performance metrics are as follows:
+
+\begin{table}[h]
+\centering
+\caption{Performance on Full Feature Set}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1 Score} \\
+\hline
+Logistic Regression & 0.8584 & 0.7751 & 0.8355 & 0.8042 \\
+SVM (linear)        & 0.8569 & 0.7698 & 0.8398 & 0.8033 \\
+\hline
+\end{tabular}
+\label{tab:full_features}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Performance on Lasso-Selected Feature Set}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1 Score} \\
+\hline
+Logistic Regression & 0.8554 & 0.7711 & 0.8312 & 0.8000 \\
+SVM (linear)        & 0.8539 & 0.7702 & 0.8268 & 0.7975 \\
+\hline
+\end{tabular}
+\label{tab:lasso_features}
+\end{table}
+
+The small differences in the performance measures, as seen in Tables~\ref{tab:full_features} and~\ref{tab:lasso_features}, show that Lasso-selected feature set maintains most of the predictive capability of the full set. However, because the entire feature set always generates slightly higher scores in most measures, using the entire dataset could yield more predictive capability. While Lasso regression encourages interpretability and dimensionality reduction, the full feature set is still potentially optimal in cases where predictive accuracy maximization is most important and computational cost is not a concern.
+\subsection{Hyperparameter Tuning}
+
+To optimize the models' performance, a grid search over a range of values for the regularization strength parameter C was performed, using 10-fold cross-validation on the validation set. The goal was to determine the value of C that resulted in the maximum F1-score for the dropout class, which would optimize precision and recall.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{hyperparameters_performance.png}
+    \caption{Performance of parameter C in F1-score for both models}
+    \label{fig:hyperparam_f1}
+\end{figure}
+Figure~\ref{fig:hyperparam_f1} shows the evolution of the F1-score throughout different C values. SVM outperformed slightly Logistic Regression in terms of F1-score, 
+ which peaked at $C$=0.5. On the other hand Logistic Regression obtained a $C$=0.1. 
+
+With these results, the optimal hyperparameters were chosen for final evaluation on the test set.
+
+
+\section{Results}
+
+
+As shown in Table~\ref{tab:test_results}, both models achieved strong predictive performance on the test set. Logistic Regression and SVM (with linear kernel) obtained nearly identical accuracy, precision, and F1 scores, with Logistic Regression showing a slightly higher ROC AUC (0.9192 vs. 0.9169) as shown in, indicating a marginally better capability to distinguish between dropout and non-dropout cases.
+
+
+\begin{table}[h]
+\centering
+\caption{Final Test Set Evaluation Results}
+\label{tab:test_results}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1 Score} & \textbf{ROC AUC} \\
+\hline
+Logistic Regression & 0.8569 & 0.7468 & 0.8286 & 0.7856 & 0.9192 \\
+SVM (linear Kernel) & 0.8554 & 0.7355 & 0.8476 & 0.7876 & 0.9169 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{conf_matrix_test_results.png}
+    \caption{Confusion matrices on the test set}
+    \label{fig:test_conf_matrix}
+\end{figure}
+
+Figure~\ref{fig:test_conf_matrix} presents the confusion matrices for both models. Both classifiers correctly identified the majority of dropout students, with SVM yielding slightly fewer false negatives (36 vs. 32), thus achieving higher recall, which aligns with the project’s priority of minimizing false negatives to ensure at-risk students are, in fact, being identified.
+
+
+
+\section{Conclusion}
+
+In this project, we tried to find out how machine learning can assist in addressing the issue of student dropout. With real data from a Portuguese university, we applied two widely used models—Logistic Regression and Support Vector Machine (SVM)—to attempt to predict whether a student would tend to drop out.
+
+Both models ran consistently and produced robust results, with Logistic Regression edging out SVM on most measures. Notably, SVM had a higher recall, or was better at picking out students who were actually at risk—a very desirable characteristic when the objective is to catch them early and assist them in staying on track, rather than simply making predictions.
+
+We also attempted feature selection using Lasso regression. While it minimized the features and simplified the model, the performance was not significantly improved. Eventually, keeping the full set of features may be the better choice, especially if recall is of greatest concern.
+
+In short, both models were strong predictors of dropouts, and such data-driven methodology could be beneficial to institutions looking to improve serving students and reduce dropout rates.
+
+\section{Work Load}
+Joana Laim contributed to 60\% of the project and Simão Machado contributed to 40\% of the project.
+
+
+\subsubsection{\ackname} The authors would like to thank the teachers Petia Giorgieva and Sónia Gouveia for providing the opportunity to explore this project and apply the concepts learned in this Curricular Unit. The structure of the course allowed for independent research and practical implementation, which proved to be a valuable learning experience.
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
