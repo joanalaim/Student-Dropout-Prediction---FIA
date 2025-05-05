@@ -36,4 +36,4 @@ Or here: <https://doi.org/10.5281/zenodo.5777340> (Original Data Source)
 
 - [Joana Laim Rodrigues](https://github.com/joanalaim)
 
-- [Simão Fernandes Machado](https://github.com/joanalaim)
+- [Simão Fernandes Machado](https://github.com/simaomachado04)
